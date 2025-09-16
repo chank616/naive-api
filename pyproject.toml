@@ -1,0 +1,10 @@
+[project]
+name = "naive-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "ddddocr>=1.5.6",
+    "fastapi[standard]>=0.116.1",
+]
