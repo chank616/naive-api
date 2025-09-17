@@ -1,7 +1,10 @@
-from fastapi import FastAPI, File
+from fastapi import FastAPI, File, Request
+from fastapi.templating import Jinja2Templates
 import ddddocr
 
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None)
+# 设置Jinja2模板目录
+templates = Jinja2Templates(directory="template")
 # 初始化ddddocr对象
 ocr = ddddocr.DdddOcr(show_ad=False, beta=True)
 
@@ -12,6 +15,7 @@ async def image_recognition(file: bytes = File(...)):
     result = ocr.classification(file)
     return {"result": result}
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+@app.get("/", response_class=templates.TemplateResponse)
+async def image_recognition_html(request: Request):
+    # 处理图片识别html页面
+    return templates.TemplateResponse("captcha.html", {"request": request})

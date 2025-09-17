@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>验证码识别</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h1 { text-align: center; color: #333; }
+        .upload-box {
+            border: 2px dashed #aaa;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        #preview {
+            max-width: 100%;
+            margin: 20px auto;
+            display: none;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            /* 按钮居中 */
+            display: block;
+            margin: 5% auto;
+        }
+        button:hover { background-color: #45a049; }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            min-height: 50px;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>验证码识别</h1>
+        
+        <form id="uploadForm">
+            <input type="file" id="imageFile" accept="image/*" class="hidden">
+            <div class="upload-box" onclick="document.getElementById('imageFile').click()">
+                <p>点击上传图片</p>
+                <p>支持的格式: JPG, PNG</p>
+            </div>
+            <img id="preview" alt="预览图">
+            <div id="result"></div>
+            <button type="button" onclick="processImage()" disabled id="processBtn">识别</button>
+        </form>
+    </div>
+
+    <script>
+        // 图片选择处理
+        const fileInput = document.getElementById('imageFile');
+        const previewImg = document.getElementById('preview');
+        const resultDiv = document.getElementById('result');
+        const processBtn = document.getElementById('processBtn');
+        
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                    processBtn.disabled = false;
+                    resultDiv.textContent = ''; // 清除旧结果
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        
+        // 图片上传识别
+        async function processImage() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            // 显示加载状态
+            processBtn.disabled = true;
+            processBtn.textContent = '识别中...';
+            resultDiv.textContent = '';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('/image_recognition', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                resultDiv.textContent = data.result;
+                resultDiv.style.backgroundColor = '#e8f5e9';
+                
+            } catch (error) {
+                resultDiv.textContent = '识别失败: ' + error.message;
+                resultDiv.style.backgroundColor = '#ffebee';
+            } finally {
+                processBtn.textContent = '识别文字';
+                processBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
