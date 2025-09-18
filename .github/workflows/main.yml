@@ -1,45 +1,23 @@
-name: Deploy on Tag Release
+name: Build and Deploy on Tag Release
 
 on:
   push:
-    tags:
-      - 'v*'  # 只监听以 v 开头的标签 (如 v1.0, v2.1.0)
+    branches:
+      - master
+    path-ignore:
+      - '**.md'
+      - '.github/**'
 
 jobs:
   deploy:
-    name: Deploy via SSH
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1
+      - name: deploy to server
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: 22
-          # 使用带有版本号的镜像标签部署
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "🚀 开始部署 naive-api:${GITHUB_REF#refs/tags/} 版本..."
-            
-            # 拉取指定版本的 Docker 镜像
-            sudo docker pull chank616/naive-api:${GITHUB_REF#refs/tags/}
-            
-            # 停止并移除现有容器（如果存在）
-            sudo docker stop naive-api || true
-            sudo docker rm naive-api || true
-            
-            # 运行新版本容器
-            sudo docker run -d \
-              --name naive-api \
-              -p 8000:8000 \
-              -e TZ=Asia/Shanghai \
-              -v /app/config:/app/config \
-              --restart=unless-stopped \
-              chank616/naive-api:${GITHUB_REF#refs/tags/}
-            
-            echo "✅ 部署完成！当前运行版本: ${GITHUB_REF#refs/tags/}"
-            sudo docker ps --filter "name=naive-api"
+            cd /home/workspace/naive-api
+            ./update.sh
